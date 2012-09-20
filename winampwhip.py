@@ -142,45 +142,34 @@ class RemoteServer_handler(socketserver.StreamRequestHandler):
 				traceback.print_exc()
 			
 	
+	
 	def magic(self):
 		self.data = self.data.strip()
-		
-		#print("{0} wrote:".format(self.client_address[0]))
-		#print(self.data)
 		
 		self.cmd, *self.params = self.data.decode('utf8').split()
 		
 		return self.dispatch(self.cmd, self.params)
 	
 	
+	
 	def dispatch(self, cmd, params=[]):
 		if not cmd: return
 		
 		print(cmd, params)
+		if cmd in ['play', 'pause', 'next', 'prev', 'stop', 'fadeout', 'forward', 'rewind', 'volup', 'voldown']:
+			return self.playback(cmd)
 		
-		if cmd == 'play':
-			return self.play()
-		elif cmd == 'pause':
-			return self.pause()
-		elif cmd == 'next':
-			return self.next()
-		elif cmd == 'prev':
-			return self.prev()
-		elif cmd == 'stop':
-			return self.stop()
-		elif cmd == 'fadeout':
-			return self.fadeout()
-		elif cmd == 'forward':
-			return self.forward()
-		elif cmd == 'rewind':
-			return self.rewind()
-		elif cmd == 'volup':
-			return self.volup()
-		elif cmd == 'voldown':
-			return self.voldown()
+		elif cmd == 'playstatus':
+			return self.playstatus()
+		
 		elif cmd == 'commands':
-			self.wfile.write(b'"play" | "pause" | "next" | "prev" | "stop" | "fadeout" | "forward" | "rewind" | "volup" | "voldown" | "passwd" | "commands"')
+			self.wfile.write(b'"play" | "pause" | "next" | "prev" | "stop" | "fadeout" | "forward" | "rewind" | "volup" | "voldown" | "passwd" | "commands" | "quit"')
 			return
+			
+		elif cmd == 'quit':
+			self.close()
+			return
+			
 		elif cmd == 'passwd':
 			if params and params[0] == self.server.passwd:
 				self.authd = True
@@ -192,93 +181,37 @@ class RemoteServer_handler(socketserver.StreamRequestHandler):
 			self.wfile.write(b'"0 Unknown Command"')
 		return
 	
+	def send(self, text):
+		return self.wfile.write(bytes(str(text),'utf8'))
+	
 	def unathd(self):
 		return self.wfile.write(b'"3 Requires Password"')
 		
-	def command(self, cmd, hwnd=None):
-		if not hwnd: hwnd = getWinamp()
-		return SendMessageW(hwnd, 0x0111, cmd, 0)
+		
+		
+	def windowMessage(self, wm, wparam=0, lparam=0):
+		return SendMessageW(getWinamp(), wm, wparam, lparam)
 		
 	
-	def play(self):
+	def playback(self, cmd):
 		global cmdcodes
 		if not self.authd: return self.unathd()
-		self.command(cmdcodes['play'])
-		self.wfile.write(b'1')
-		return
-	
-	def pause(self):
-		global cmdcodes
-		if not self.authd: return self.unathd()
-		self.command(cmdcodes['pause'])
-		self.wfile.write(b'1')
-		return
+		self.windowMessage(0x0111, cmdcodes[cmd])
+		self.wfile.write(b'1 Success')
 		
 	
-	def next(self):
-		global cmdcodes
+	def playstatus(self):
 		if not self.authd: return self.unathd()
-		self.command(cmdcodes['next'])
-		self.wfile.write(b'1')
-		return
+		stats = self.windowMessage(0x400, 0, 104)
 		
+		if stats == 1:
+			return self.send('PLAYSTATUS playing')
+		elif stats == 3:
+			return self.send('PLAYSTATUS paused')
+		return self.send('PLAYSTATUS stopped')
 	
-	def prev(self):
-		global cmdcodes
-		if not self.authd: return self.unathd()
-		self.command(cmdcodes['prev'])
-		self.wfile.write(b'1')
-		return
-		
 	
-	def stop(self):
-		global cmdcodes
-		if not self.authd: return self.unathd()
-		self.command(cmdcodes['stop'])
-		self.wfile.write(b'1')
-		return
-		
 	
-	def fadeout(self):
-		global cmdcodes
-		if not self.authd: return self.unathd()
-		self.command(cmdcodes['fadeout'])
-		self.wfile.write(b'1')
-		return
-		
-	
-	def forward(self):
-		global cmdcodes
-		if not self.authd: return self.unathd()
-		self.command(cmdcodes['forward'])
-		self.wfile.write(b'1')
-		return
-		
-	
-	def rewind(self):
-		global cmdcodes
-		if not self.authd: return self.unathd()
-		self.command(cmdcodes['rewind'])
-		self.wfile.write(b'1')
-		return
-		
-	
-	def volup(self):
-		global cmdcodes
-		if not self.authd: return self.unathd()
-		self.command(cmdcodes['volup'])
-		self.wfile.write(b'1')
-		return
-		
-	
-	def voldown(self):
-		global cmdcodes
-		if not self.authd: return self.unathd()
-		self.command(cmdcodes['voldown'])
-		self.wfile.write(b'1')
-		return
-		
-		
 	#def finish(self):
 	#	## Note:
 	#	##   If setup() or handle() raise an exception, this function

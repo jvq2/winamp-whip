@@ -17,7 +17,6 @@ try:
 		
 		# Receive data from the server
 		received = str(sock.recv(1024), "utf-8")
-		print("    Sent: {0}".format(data))
 		print("Received: {0}".format(received))
 		
 finally:
