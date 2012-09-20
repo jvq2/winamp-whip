@@ -1,3 +1,10 @@
+## Copyright 2012 Joey
+## 
+## winamp-whip is released under GPL. Please read the license before continuing.
+## 
+## The latest source can be found here:
+##	 https://github.com/jvq2/httpyd
+##
 import socketserver
 import threading
 from ctypes import windll, wintypes
