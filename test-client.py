@@ -2,7 +2,7 @@ import socket
 import sys
 
 
-HOST, PORT = "localhost", 696969
+HOST, PORT = "localhost", 6969
 #data = " ".join(sys.argv[1:])
 
 # Create a socket (SOCK_STREAM means a TCP socket)
