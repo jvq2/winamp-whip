@@ -287,12 +287,16 @@ class Remote():
 	
 	
 
-class RemoteServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+class RemoteServer(socketserver.ThreadingTCPServer):
 	require_passwd = True
 	passwd = 'whipit'
 	remote_open = False
 	remote_close = False
-	pass # no methods implemented here
+	
+	def __init__(self, host="", port=6969):
+		return socketserver.ThreadingTCPServer.__init__(self, (host, port), RemoteServer_handler)
+	
+	pass # no other methods implemented here
 
 """
 0 Unknown Command
@@ -452,9 +456,8 @@ class RemoteServer_handler(socketserver.StreamRequestHandler):
 	
 
 if __name__ == "__main__":
-	HOST, PORT = "", 6969
 
-	server = RemoteServer((HOST, PORT), RemoteServer_handler)
+	server = RemoteServer("", 6969)
 	server.remote_open = True
 	server.remote_close = True
 
