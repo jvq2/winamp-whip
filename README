@@ -5,3 +5,20 @@ winamp-whip is released under GPL. Please read the license before continuing.
 The latest source can be found here:
 	https://github.com/jvq2/winamp-whip
 	
+===========================================================
+
+Example Usage:
+	
+	Server: (optionally - just start winampwhip.py by itself {connects to localhost:6969})
+		
+		>>> from winampwhip import *
+		>>> server = RemoteServer("127.0.0.1", 6969)
+		>>> server.serve_forever()
+	
+	
+	Client: (see example-remote.py for more)
+		
+		>>> import winampwhip
+		>>> remote = winampwhip.Remote("127.0.0.1", 6969)
+		>>> remote.play()
+
